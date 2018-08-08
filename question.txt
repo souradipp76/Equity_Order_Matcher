@@ -1,0 +1,115 @@
+Introduction
+In the stock trading world, the order book is the place where all active orders (both Buy and Sell) are maintained in certain priority for the purpose of matching buy and sell orders. Orders (both Buy and Sell Sides) can be of different types, for the purposes of this challenge please consider following order types:
+
+Market: A Market order is an order to buy or sell a symbol that must be matched at best price on the other side.
+
+Market Buy: Amount , where  is current lowest selling price available in the order book.
+Market Sell: Amount , where  is current highest buying price available in the order book.
+Limit: A Limit order is an order to buy or sell a symbol that must be matched at a specified price  or better.
+
+Limit Buy: Amount , where  is selling price and , eventually.
+Limit Sell: Amount , where  is buying price and , eventually.
+IOC: An immediate or cancel order (IOC) is an order to buy or sell a symbol that must be matched at a specified capped price  in the next matching cycle, and any portion of the order that cannot be matched will be automatically canceled.
+
+IOC Limit Buy: Amount , where  is selling price and , now.
+IOC Limit Sell: Amount , where  is buying price and , now.
+Task
+In this challenge you should design a matcher engine which performs matching between buy and sell sides of the order book. The matcher receives an input stream consisting of buy and sell orders and after receiving a match command, it should attempt to match any outstanding orders at that point in time. The matcher must ensure that buy order with highest price is matched with sell order with the lowest price. In case of multiple orders have the same price on given side (buy or sell), the matcher should pick order on first come first serve based on timestamp. A buy order for a symbol  at price  can be matched with any sell order on the same symbol  at prices less than or equal to . Thus, a new buy or sell order may be matched with one or more of outstanding sell or buy orders.
+
+Commands Description
+The input command will have the following components, also note that some of the components are optional:
+
+Action:  (New),  (Amend),  (Cancel),  (Match) or  (Query).
+OrderID: An integer value in the range  inclusive.
+Timestamp: An integer value, typically milliseconds since epoch.
+Symbol: Varying length string containing only alphabets.
+OrderType:  (Market),  (Limit) or  (IOC).
+Side:  (Buy) or  (Sell)
+Price: A float value,  if OrderType is  (Market). The price is given exactly to two places of decimal.
+Quantity: An integer value in the range  inclusive.
+The input command structure depends on the Action component, i.e., there are following five types of input commands:
+
+The  (New) command means that a new order is being requested to be entered into the matching book. The matcher should reject the incoming order in case of duplicate order Id or invalid input fields. The command is described as:
+
+
+The matcher should output one of the following:
+
+For example, consider the following commands:
+
+  N,2,0000002,XYZ,L,B,104.53,100
+  N,3,0000002,XYZ,L,B,104.53,100.3
+The matcher should output the following:
+
+  2 - Accept
+  3 - Reject - 303 - Invalid order details
+Note that,  is not an integer, so order  is rejected.
+
+The  (Amend) command means an existing order is being requested to be updated as per details in this command. A valid amend command should have quantity and/or price amended, any other field update should result into error code.
+
+In case of quantity amend down, the amended order should not lose existing priority in the matching book. In all other amend requests, the priority of amended order in matching book may vary according to the latest price and timestamp. Also note that partial amends should be supported. In case of a quantity amend request on a partially executed order, it should be accepted. If the quantity in the amend request is less than or equal to the currently matched quantity, then order should be considered closed. In scenarios where order is fully matched or already cancelled, new amend requests should be rejected. The command is described as:
+
+
+The matcher should output one of the following:
+
+For example, consider the following commands:
+
+  A,2,0000001,XYZ,L,B,103.53,150
+  A,2,0000001,XYZ,L,S,103.53,150
+The matcher should output the following:
+
+  2 - AmendAccept
+  2 - AmendReject - 101 - Invalid amendment details
+Note that, we are trying to update the OrderType from buy to sell, so amend order  is rejected.
+
+The  (Cancel) command means an existing order is being requested to be canceled. Also note that partial cancels should be supported. In scenarios where order is fully matched or already cancelled, new cancel requests should be rejected. The command is described as:
+
+
+The matcher should output one of the following:
+
+For example, consider the following commands:
+
+  X,1,0000001
+  X,2,0000002
+  X,2,0000002
+The matcher should output the following:
+
+  1 - CancelAccept
+  2 - CancelAccept
+  2 – CancelReject - 404 - Order does not exist
+The  (Match) command means that the existing orders in the matching book should be matched now. The Symbol is an optional parameter if specified would mean matching should be done only for the specified symbol else it should be done for all the symbols. The command is described by one of the following formats:
+
+The matching result has three components which must be separated by a pipe ():
+
+Symbol: This represents the matched symbol.
+MatchedBuy: This represents the information of matched buy. It should have  format.
+MatchedSell: This represents the information of matched sell. It should have  format.
+The matcher should output all resulting matches in the following format:
+
+
+In case of no matches, there shouldn't be any output. For example, consider the following commands:
+
+  N,1,0000001,ALN,L,B,60.90,100
+  N,11,0000002,XYZ,L,B,60.90,200
+  N,110,0000003,XYZ,L,S,60.90,100
+  N,112,0000003,XYZ,L,S,60.90,120
+  N,10,0000006,ALN,L,S,60.90,100
+  M,00010
+  M,00010,ALN
+The matcher should output the following:
+
+  ALN|1,L,100,60.90|60.90,100,L,10
+  XYZ|11,L,100,60.90|60.90,100,L,110
+  XYZ|11,L,100,60.90|60.90,100,L,112
+Note that, there is no output for the match command M,00010,ALN because after the match command M,00010 there are no buy or sell orders to be matched.
+
+Also, consider the following commands:
+
+  N,1,0000001,ALN,L,B,60.90,100
+  N,11,0000002,XYZ,L,B,60.90,200
+  N,110,0000003,XYZ,L,S,60.90,100
+  N,112,0000003,XYZ,L,S,60.90,120
+  N,10,0000006,ALN,L,S,60.90,100
+  M,00010,ALN
+The matcher should output the following:
+
+  ALN|1,L,100,60.90|60.90,100,L,10
