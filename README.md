@@ -22,9 +22,9 @@ Equity Order Matcher is a platform for matching active equity orders in an order
 * **MATCH** : Matches the existing orders in the order book at that timestamp. <br />
 	`M`,*`Timestamp,[Symbol]`*
 
-For further information:  Visit https://github.com/Souradip-sopho/Equity_Order_Matcher/blob/master/question.txt
+For further information:  Visit this [link](https://github.com/souradipp76/Equity_Order_Matcher/blob/master/question.txt).
 ## Built With
 C/C++
 
 ## Author
-Souradip Pal | [GitHub](https://github.com/Souradip-sopho) | [LinkedIn](https://www.linkedin.com/in/souradip-pal-a9693111b/)
+Souradip Pal | [GitHub](https://github.com/souradipp76) | [LinkedIn](https://www.linkedin.com/in/souradip-pal-a9693111b/)
